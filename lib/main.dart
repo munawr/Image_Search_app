@@ -1,18 +1,9 @@
-// import 'dart:io';
 import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
 import 'package:pixabay_image_search/api_provider/api_provider.dart';
 import 'Model/search_model.dart';
 
 void main() {
-  // WidgetsFlutterBinding.ensureInitialized();
-
-  // ByteData data =
-  //     await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
-  // SecurityContext.defaultContext
-  //     .setTrustedCertificatesBytes(data.buffer.asUint8List());
-
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -108,8 +99,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                     crossAxisCount: 2),
                             itemCount: (data as SearchModel).hits!.length,
                             itemBuilder: (context, index) {
-                              return Image.network(
-                                  data.hits![index].previewURL.toString());
+                              return InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => DetailedScreen(
+                                            imageUrl: data
+                                                .hits![index].largeImageURL
+                                                .toString()),
+                                      ));
+                                },
+                                child: Image.network(
+                                    data.hits![index].previewURL.toString()),
+                              );
                             },
                           ),
                         );
@@ -119,6 +122,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: CircularProgressIndicator(),
                   ),
         ],
+      ),
+    );
+  }
+}
+
+class DetailedScreen extends StatelessWidget {
+  final String imageUrl;
+  const DetailedScreen({
+    Key? key,
+    required this.imageUrl,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(),
+      body: Image.network(
+        imageUrl,
+        fit: BoxFit.cover,
       ),
     );
   }
