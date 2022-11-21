@@ -1,11 +1,18 @@
-import 'package:cached_network_image/cached_network_image.dart';
+// import 'dart:io';
 import 'package:flutter/material.dart';
+// import 'package:flutter/services.dart';
 import 'package:pixabay_image_search/api_provider/api_provider.dart';
-
 import 'Model/search_model.dart';
 
 void main() {
-  runApp(const MyApp());
+  // WidgetsFlutterBinding.ensureInitialized();
+
+  // ByteData data =
+  //     await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
+  // SecurityContext.defaultContext
+  //     .setTrustedCertificatesBytes(data.buffer.asUint8List());
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -33,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
   ValueNotifier<SearchModel?> array = ValueNotifier(null);
 
   TextEditingController controller = TextEditingController();
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
-          'Testing',
+          'Pixabay Image Search',
           style: TextStyle(color: Colors.deepPurple),
         ),
       ),
@@ -66,36 +74,50 @@ class _HomeScreenState extends State<HomeScreen> {
                   )),
               IconButton(
                   onPressed: () async {
-                    array.value = await ApiProvider().search(
-                        controller.text.toString().split(' ').join('+'));
+                    setState(() {
+                      isLoading = true;
+                    });
+                    print("testing");
+                    array.value = await ApiProvider()
+                        .search(controller.text.toString().split(' ').join('+'))
+                        .then((value) {
+                      setState(() {
+                        isLoading = false;
+                      });
+                    });
                   },
-                  icon: Icon(Icons.search))
+                  icon: const Icon(Icons.search))
             ],
           ),
-          SizedBox(
+          const SizedBox(
             height: 10,
           ),
           if (array != null)
-            ValueListenableBuilder(
-                valueListenable: array,
-                builder: (_, data, __) {
-                  if (data == null) {
-                    return Text('pls search');
-                  } else {
-                    return Expanded(
-                      child: GridView.builder(
-                        physics: BouncingScrollPhysics(),
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2),
-                        itemCount: data.hits!.length,
-                        itemBuilder: (context, index) {
-                          return Image.network(
-                              data.hits![index].previewURL.toString());
-                        },
-                      ),
-                    );
-                  }
-                }),
+            isLoading
+                ? ValueListenableBuilder(
+                    valueListenable: array,
+                    builder: (_, data, __) {
+                      if (data == null) {
+                        return const Text('Search for Images');
+                      } else {
+                        return Expanded(
+                          child: GridView.builder(
+                            physics: const BouncingScrollPhysics(),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2),
+                            itemCount: (data as SearchModel).hits!.length,
+                            itemBuilder: (context, index) {
+                              return Image.network(
+                                  data.hits![index].previewURL.toString());
+                            },
+                          ),
+                        );
+                      }
+                    })
+                : const Center(
+                    child: CircularProgressIndicator(),
+                  ),
         ],
       ),
     );
